@@ -1,0 +1,15 @@
+services:
+  fxrouter:
+    image: fxtelekom/fxrouter
+    container_name: fxrouter
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - NET_RAW
+    network_mode: host
+    environment:
+      - HOST_IP=10.8.2.7
+      - HOST_INTERFACE=ens18
+    volumes:
+      - ./wg0.conf:/etc/wireguard/wg0.conf
