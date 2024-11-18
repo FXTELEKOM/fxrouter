@@ -19,6 +19,12 @@ Az alkalmazás saját routing és tűzfalbeállításokat hoz létre indításko
 
 A tőlünk kapott konfigurációs fájlokat a `/etc/wireguard/wg0.conf` helyre kell csatolni.
 
+**v0.0.2** óta lehet külön IP címet beállítani a DNS szervernek, ha esetleg a host rendszeren fut egy Pi-Hole vagy AdGuard szerver:
+
+- `DNS_IP` A kívánt DNS ipcíme amin az FXtelekom DNS szervere listenel.
+
+Ez a beállítás opcinoális és, ha nincs beállítva a `HOST_IP` ipcím lesz használva a DNS-nek.
+
 ## DNS
 
 Az FXrouter futtat egy lokális DNS szervert, amit be kell állítani azokon az eszközökön, amelyek használni fogják az alkalmazást.
@@ -52,7 +58,8 @@ services:
       - NET_RAW
     network_mode: host
     environment:
-      - HOST_IP=192.168.0.154 
+      - HOST_IP=192.168.0.154
+      - DNS_IP=192.168.0.153 # Opcionális
       - HOST_INTERFACE=eth1
     volumes:
       - ./wg0.conf:/etc/wireguard/wg0.conf
