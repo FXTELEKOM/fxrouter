@@ -1,4 +1,7 @@
 #!/bin/bash
+VERSION="0.0.2"
+
+
 BANNER=$(cat <<EOF
   ________   _________ ______ _      ______ _  ______  __  __
  |  ____\ \ / /__   __|  ____| |    |  ____| |/ / __ \|  \/  |
@@ -6,7 +9,7 @@ BANNER=$(cat <<EOF
  |  __|   > <    | |  |  __| | |    |  __| |  <| |  | | |\/| |
  | |     / . \   | |  | |____| |____| |____| . \ |__| | |  | |
  |_|    /_/ \_\  |_|  |______|______|______|_|\_\____/|_|  |_|
-                     FXRouter Alpha 0.0.1
+                     FXRouter Alpha $VERSION
 
 EOF
 )
@@ -58,7 +61,6 @@ exit_cleanup() {
     ip route del default dev wg0 table 51820
     iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE
 
-
     iptables -t nat -D POSTROUTING -o $HOST_INTERFACE -j MASQUERADE
     iptables -D FORWARD -i $HOST_INTERFACE -o $HOST_INTERFACE -j ACCEPT
 
@@ -88,6 +90,11 @@ route_ip_from_url_list() {
 
     ip_list=$(curl -s $url | grep -v '^\s*#' | grep -v '^\s*$')
 
+    if [ $? -ne 0 ] || [ -z "$ip_list" ]; then
+        color_text "Hiba az IP listák letöltése során: $url" "RED_TEXT"
+        exit 1
+    fi
+
     while IFS= read -r ip; do
         if [[ -n "$ip" ]]; then
             if [[ "$ip" =~ : ]]; then
@@ -105,6 +112,11 @@ delete_route_ip_from_url_list() {
     url=$1
 
     ip_list=$(curl -s $url | grep -v '^\s*#' | grep -v '^\s*$')
+
+    if [ $? -ne 0 ] || [ -z "$ip_list" ]; then
+        color_text "Hiba az IP listák letöltése során: $url" "RED_TEXT"
+        exit 1
+    fi
 
     while IFS= read -r ip; do
         if [[ -n "$ip" ]]; then
@@ -139,9 +151,11 @@ function append_dns_servers() {
 
 DNSMASQ_CONFIG="/etc/dnsmasq.conf"
 
+DNS_IP="${DNS_IP:-$HOST_IP}"
+
 echo "bind-interfaces" > $DNSMASQ_CONFIG
 echo "interface=$HOST_INTERFACE" >> $DNSMASQ_CONFIG
-echo "listen-address=$HOST_IP" >> $DNSMASQ_CONFIG
+echo "listen-address=$DNS_IP" >> $DNSMASQ_CONFIG
 echo "no-hosts" >> $DNSMASQ_CONFIG
 echo "cache-size=1000" >> $DNSMASQ_CONFIG
 echo "neg-ttl=60" >> $DNSMASQ_CONFIG
@@ -204,7 +218,27 @@ iptables -I DOCKER-USER -i wg0 -o $HOST_INTERFACE -m state --state RELATED,ESTAB
 color_text "Tűzfalbeállítások létrehozva!" "GREEN_TEXT"
 
 echo -e "\n"
+
 color_text "Minden beállítás sikeresen megtörtént!" "GREEN_TEXT"
+
+VPN_IP=$(sed -n 's/^Endpoint\s*=\s*\([0-9\.]*\):.*$/\1/p' /etc/wireguard/wg0.conf)
+
+cat <<EOF > /tmp/fxdata.json
+{
+    "DNS_IP": "$DNS_IP",
+    "HOST_IP": "$HOST_IP",
+    "VERSION": "$VERSION",
+    "VPN_IP": "$VPN_IP"
+}
+EOF
+
+sleep 2
+
+clear
+
+echo ""
+
+python3 -u /pyinfo/pyinfo.py
 
 while true; do
     sleep 1
