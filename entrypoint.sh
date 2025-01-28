@@ -59,6 +59,7 @@ exit_cleanup() {
     delete_route_ip_from_url_list "https://fxtelekom.org/ips/websupportsk.txt"
     delete_route_ip_from_url_list "https://fxtelekom.org/ips/fastly.txt"
     delete_route_ip_from_url_list "https://fxtelekom.org/ips/gfn.txt"
+    delete_route_ip_from_url_list "https://fxtelekom.org/ips/wot.txt"
 
     ip route del default dev wg0 table 51820
     iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE
@@ -204,6 +205,7 @@ route_ip_from_url_list "https://fxtelekom.org/ips/valve-cs2.txt"
 route_ip_from_url_list "https://fxtelekom.org/ips/websupportsk.txt"
 route_ip_from_url_list "https://fxtelekom.org/ips/fastly.txt"
 route_ip_from_url_list "https://fxtelekom.org/ips/gfn.txt"
+route_ip_from_url_list "https://fxtelekom.org/ips/wot.txt"
 
 
 ip route add default dev wg0 table 51820
